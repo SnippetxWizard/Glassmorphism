@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Glassmorphism Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            overflow: hidden;
+        }
+
+        .calculator {
+            position: relative;
+            width: 360px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .calculator::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(255, 255, 255, 0.1),
+                rgba(255, 255, 255, 0)
+            );
+            animation: rotate 15s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .display-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .history {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: right;
+            padding: 5px 10px;
+            min-height: 20px;
+        }
+
+        .display {
+            width: 100%;
+            height: 70px;
+            background: transparent;
+            border: none;
+            font-size: 32px;
+            color: white;
+            text-align: right;
+            padding: 10px;
+            pointer-events: none;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+
+        button {
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background: rgba(95, 75, 139, 0.3);
+        }
+
+        .operator:hover {
+            background: rgba(95, 75, 139, 0.5);
+        }
+
+        .memory {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .memory:hover {
+            background: rgba(102, 126, 234, 0.5);
+        }
+
+        .equals {
+            background: rgba(118, 75, 162, 0.4);
+        }
+
+        .equals:hover {
+            background: rgba(118, 75, 162, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display-container">
+            <div class="history"></div>
+            <input type="text" class="display" value="0" readonly>
+        </div>
+        <div class="buttons">
+            <button class="memory">MC</button>
+            <button class="memory">MR</button>
+            <button class="memory">M+</button>
+            <button class="memory">M-</button>
+            <button class="clear">C</button>
+            <button class="operator">(</button>
+            <button class="operator">)</button>
+            <button class="operator">%</button>
+            <button class="operator">÷</button>
+            <button class="backspace">⌫</button>
+            <button>7</button>
+            <button>8</button>
+            <button>9</button>
+            <button class="operator">×</button>
+            <button class="operator">√</button>
+            <button>4</button>
+            <button>5</button>
+            <button>6</button>
+            <button class="operator">-</button>
+            <button class="operator">x²</button>
+            <button>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button class="operator">+</button>
+            <button class="equals">=</button>
+            <button class="operator">±</button>
+            <button>0</button>
+            <button>.</button>
+            <button class="operator">1/x</button>
+            <button class="memory">MS</button>
+        </div>
+    </div>
+
+    <script>
+        const display = document.querySelector('.display');
+        const history = document.querySelector('.history');
+        const buttons = document.querySelectorAll('button');
+        let currentInput = '';
+        let memory = 0;
+        let lastResult = null;
+
+        function calculateResult(expression) {
+            try {
+                let expr = expression
+                    .replace('×', '*')
+                    .replace('÷', '/')
+                    .replace('√', 'Math.sqrt')
+                    .replace('x²', '**2')
+                    .replace('1/x', '1/')
+                    .replace('%', '/100');
+                
+                return Function(`"use strict"; return (${expr})`)();
+            } catch (error) {
+                return 'Error';
+            }
+        }
+
+        function updateDisplay() {
+            display.value = currentInput || '0';
+        }
+
+        buttons.forEach(button => {
+            button.addEventListener('click', () => {
+                const value = button.textContent;
+
+                switch (value) {
+                    case 'C':
+                        currentInput = '';
+                        history.textContent = '';
+                        break;
+                    case '⌫':
+                        currentInput = currentInput.slice(0, -1);
+                        break;
+                    case '=':
+                        history.textContent = currentInput;
+                        const result = calculateResult(currentInput);
+                        currentInput = result.toString();
+                        lastResult = result;
+                        break;
+                    case '±':
+                        currentInput = currentInput.startsWith('-') 
+                            ? currentInput.slice(1) 
+                            : '-' + currentInput;
+                        break;
+                    case 'MC':
+                        memory = 0;
+                        break;
+                    case 'MR':
+                        currentInput = memory.toString();
+                        break;
+                    case 'M+':
+                        memory += parseFloat(lastResult || calculateResult(currentInput) || 0);
+                        break;
+                    case 'M-':
+                        memory -= parseFloat(lastResult || calculateResult(currentInput) || 0);
+                        break;
+                    case 'MS':
+                        memory = parseFloat(lastResult || calculateResult(currentInput) || 0);
+                        break;
+                    default:
+                        if (lastResult && !'+-×÷%√(±'.includes(value)) {
+                            currentInput = '';
+                            lastResult = null;
+                        }
+                        currentInput += value;
+                }
+                updateDisplay();
+            });
+        });
+
+        // Keyboard support
+        document.addEventListener('keydown', (e) => {
+            const key = e.key;
+            const button = Array.from(buttons).find(btn => 
+                btn.textContent === key || 
+                (key === 'Enter' && btn.textContent === '=') ||
+                (key === 'Backspace' && btn.textContent === '⌫')
+            );
+            if (button) {
+                button.click();
+                button.classList.add('active');
+                setTimeout(() => button.classList.remove('active'), 100);
+            }
+        });
+    </script>
+</body>
+</html>
